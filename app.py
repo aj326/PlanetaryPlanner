@@ -10,16 +10,16 @@ from urllib.parse import quote_plus, urlencode
 from authlib.integrations.flask_client import OAuth
 from dotenv import find_dotenv, load_dotenv
 from flask import Flask, redirect, render_template, session, url_for, jsonify, request
-from flask_cors import cross_origin
+from flask_cors import cross_origin, CORS
 
 from auth import requires_auth, requires_scope
 from autherror import AuthError
-ENV_FILE = find_dotenv()
-if ENV_FILE:
-    load_dotenv(ENV_FILE)
+from flask_migrate import Migrate, MigrateCommand
+
+from models import db, setup_db, Location, User
 
 logging.basicConfig(level=env.get("LOGLEVEL", "INFO"), format='%(levelname)s - %(message)s')
-logging.debug("debug on")
+
 # TODO Auth0 is set up and running at the time of submission. All required configuration settings are included in a
 #  bash file which export:
 
@@ -28,7 +28,8 @@ app = Flask(__name__)
 app.secret_key = env.get("APP_SECRET_KEY")
 
 oauth = OAuth(app)
-
+setup_db(app)
+migrate = Migrate(app, db)
 oauth.register(
     "auth0",
     client_id=env.get("AUTH0_CLIENT_ID"),
@@ -52,24 +53,27 @@ oauth.register(
 
 # This doesn't need authentication
 @app.route("/api/public")
-@cross_origin(headers=["Content-Type", "Authorization"])
 def public():
     response = "Hello from a public endpoint! You don't need to be authenticated to see this."
     return jsonify(message=response)
 
 
+
 # This needs authentication
 @app.route("/api/private")
-@cross_origin(headers=["Content-Type", "Authorization"])
 @requires_auth('read:planner')
 def private(x):
     response = "Hello from a private endpoint! You need to be authenticated to see this."
-    return jsonify(message=response)
-
+    # print(request.json)
+    return jsonify({"test":response,
+                    # "user":user
+                    })
+# @app.route("/api/users/user_id")
+# @cross_origin(headers=["Content-Type", "Authorization"])
+# def getuser():
 
 # This needs authorization
 @app.route("/api/private-scoped")
-@cross_origin(headers=["Content-Type", "Authorization"])
 @requires_auth()
 def private_scoped():
     if requires_scope("read:messages"):
@@ -83,6 +87,7 @@ def private_scoped():
 
 @app.route("/")
 def home():
+    user = session.get("user")
     return render_template(
         "home.html",
         session=session.get("user"),
@@ -130,3 +135,5 @@ def handle_auth_error(ex):
 
 if __name__ == "__main__":
     app.run(port=env.get("PORT", 3000))
+    CORS(app, resources={r"/*": {"origins": "*"}})
+
