@@ -29,7 +29,7 @@ app.secret_key = env.get("APP_SECRET_KEY")
 
 oauth = OAuth(app)
 setup_db(app)
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 oauth.register(
     "auth0",
     client_id=env.get("AUTH0_CLIENT_ID"),
@@ -93,12 +93,34 @@ def home():
         session=session.get("user"),
         pretty=json.dumps(session.get("user"), indent=4),
     )
+@app.route("/users/<int:id>/settings",methods=["POST"])
+def store_settings(id):
+    print(id)
+    user = session.get("user")
+    result = request.form
+    print(result.get('city'))
+    location = Location(user_id=id,city=result.get('city',None),region=result.get('region',None),timezone=result.get('timezone','UTC')
+                        ,latitude=float(result.get('latitude',0)),longitude=float(result.get('longitude',0)))
+    location.insert()
+    return render_template(
+        "home.html",
+        session=session.get("user"),
+        pretty=json.dumps(session.get("user"), indent=4),
+    )
+
 
 
 @app.route("/callback", methods=["GET", "POST"])
 def callback():
     token = oauth.auth0.authorize_access_token()
     session["user"] = token
+    print(token["userinfo"]["name"])
+    user = User.query.filter_by(username=token["userinfo"]["name"]).one_or_none()
+    if not user:
+        user = User(username=token["userinfo"]["name"])
+        user.insert()
+        return render_template("settings.html",id=user.id)
+    print(user)
     return redirect("/")
 
 

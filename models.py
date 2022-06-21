@@ -40,16 +40,16 @@ User
 class User(db.Model):
     __tablename__ = 'User'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True,unique=True)
     username = Column(String, unique=True, nullable=False)
-    location = relationship("Location", back_populates="user", uselist=False)
-    events = relationship("Events",back_populates="user")
+    location = relationship("Location", back_populates="username", uselist=False)
+    events = relationship("Events",back_populates="username")
 
     def __init__(self, username):
         self.username = username
 
     def __repr__(self):
-        return f'<User {self.id}: {self.username}'
+        return f'<User {self.id}: {self.username}>'
 
     def insert(self):
         db.session.add(self)
@@ -90,7 +90,7 @@ class Location(db.Model):
         self.longitude = longitude
 
     def __repr__(self):
-        return f'<Location {self.id}: ({self.user_id},{self.username}): {self.city}, {self.region}, {self.latitude}, {self.longitude}'
+        return f'<Location {self.id}: ({self.user_id},{self.username}): {self.city}, {self.region}, {self.latitude}, {self.longitude}>'
 
     def insert(self):
         db.session.add(self)
@@ -128,7 +128,7 @@ class Events(db.Model):
         self.busy = busy
 
     def __repr__(self):
-        return f'<Event {self.id}: {self.time},{self.description},{self.busy}'
+        return f'<Event {self.id}: {self.time},{self.description},{self.busy}>'
 
     def insert(self):
         db.session.add(self)
