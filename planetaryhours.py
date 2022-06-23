@@ -57,13 +57,13 @@ def planetary_hours(date, sunrise, sunset, daylight_hours, night_hours):
     result = []
     current = sunrise
     for hour in range(12):
-        result.append((current.strftime("%H:%M:%S"), (current + daylight_hours).strftime("%H:%M:%S")))
+        result.append((current , (current + daylight_hours)))
         current = current + daylight_hours
     # pprint.pprint(result)
     # result.clear()
     # print("sunset")
     for hour in range(12):
-        result.append((current.strftime("%H:%M:%S"), (current + night_hours).strftime("%H:%M:%S")))
+        result.append((current , (current + night_hours)))
         current = current + night_hours
     # pprint.pprint(result)
     day = calendar.day_name[date.weekday()]  # 'Wednesday'
@@ -71,7 +71,7 @@ def planetary_hours(date, sunrise, sunset, daylight_hours, night_hours):
     return (list(wrapped))
 
 
-def get_adjusted_hours(location, date=datetime.today()):
+def get_adjusted_hours(location, date=datetime.today(),tz=False):
     """
 
     :param location
@@ -98,11 +98,19 @@ def get_adjusted_hours(location, date=datetime.today()):
                  tzinfo=pytz.timezone(location.timezone))
     night_seconds = next_s['sunrise'] - s['sunset']
     night_hours = night_seconds / 12
+    sunrise = s['sunrise']
+    sunset = s['sunset']
+    # if tz:
+    #     timezone=pytz.timezone(location.timezone)
+    #     date = timezone.localize(date)
+    #     sunrise = timezone.localize(sunrise)
+    #     sunset = timezone.localize(sunset)
+
     logging.debug(
         f"{str(date)}\nday:{str(daylight_hours), str(daylight_seconds)}\nnight:{str(night_hours), str(night_seconds)}")
 
-    return((str(date), adjusted),
-         planetary_hours(date, s['sunrise'], s['sunset'], daylight_hours, night_hours))
+    return({"date":(str(date)),'yesterday':adjusted,
+         'planetaryhours':planetary_hours(date, sunrise, sunset, daylight_hours, night_hours)})
 
 
 def check_city(name):

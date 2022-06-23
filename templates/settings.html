@@ -1,8 +1,30 @@
-<form action = "http://localhost:3000/users/{{ id }}/settings" method = "POST">
-   <p>City <input type = "text" name = "city" /></p>
-   <p>Region <input type = "text" name = "region" /></p>
-   <p>Timezone <input type = "text" name = "timezone" /></p>
-   <p>Latitude <input type ="text" name = "latitude" /></p>
-   <p>Longitude <input type ="text" name = "longitude" /></p>
-   <p><input type = "submit" value = "Submit" /></p>
-</form>
+<script>
+    const cityInput = document.getElementById('city');
+    const regionInput = document.getElementById('region');
+    const timezoneInput = document.getElementById('timezone');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+
+    document.getElementById('settingsForm').onsubmit = function (e) {
+        fetch('/users/{{ id }}/settings', {
+            method: 'POST',
+            body: JSON.stringify({
+                    'city': cityInput.value,
+                    'region': regionInput.value,
+                    'timezone': timezoneInput.value,
+                    'latitude': latitudeInput.value,
+                    'longitude': longitudeInput.value
+                }
+            ),
+            headers: {
+                'Content-Type':
+                    'application/json',
+            }
+        })  .then(response => response.json())
+        .then(data => console.log(data))
+            .catch(function () {
+                console.error('Error occurred');
+            });
+    }
+
+</script>
