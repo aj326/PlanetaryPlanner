@@ -1,32 +1,30 @@
+import json
 from unittest import TestCase
 
 import pytz
 from astral import LocationInfo
-import os
-import json
 from flask_sqlalchemy import SQLAlchemy
 
 from app import app
-from models import setup_db, User, Location, Events
-
-from planetaryhours import my_location
+from models import setup_db
+from planetaryhours import check_location
 
 
 class PlanetaryHourTest(TestCase):
-    def test_my_location_lat1(self):
+    def test_check_location_lat1(self):
         with self.assertRaises(ValueError):
-            my_location("test1","T","Asia/Riyadh",-97,55)
-    def test_my_location_long(self):
+            check_location("test1", "T", "Asia/Riyadh", -97, 55)
+
+    def test_check_location_long(self):
         with self.assertRaises(ValueError):
-            my_location("test1","T","Asia/Riyadh",-90,-555)
-    def test_my_location_tz(self):
+            check_location("test1", "T", "Asia/Riyadh", -90, -555)
+
+    def test_check_location_tz(self):
         with self.assertRaises(pytz.UnknownTimeZoneError):
-            my_location("test1","T","Asia/Riyadhhhhhhh",-90,-55)
-    def test_my_location(self):
-        self.assertIsInstance(my_location("test1","T","Asia/Riyadh",-90,-55),LocationInfo)
+            check_location("test1", "T", "Asia/Riyadhhhhhhh", -90, -55)
 
-
-
+    def test_check_location(self):
+        self.assertIsInstance(check_location("test1", "T", "Asia/Riyadh", -90, -55), LocationInfo)
 
 
 class APITestCase(TestCase):
@@ -38,16 +36,26 @@ class APITestCase(TestCase):
         self.client = self.app.test_client
         self.database_name = "test_planetary_planner"
         self.database_path = "postgresql://{}/{}".format('postgres:abc@localhost:5432', self.database_name)
+        self.admin_token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkxPeGtOeXViVk42TXhDRFBYcjRxUyJ9.eyJpc3MiOiJodHRwczovL3BsYS51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjJhZTkxY2E1NjM5ZjhkNGFkMjFjOWIxIiwiYXVkIjpbInBsYW5ldGFyeXBsYW5uZXIvYXBpIiwiaHR0cHM6Ly9wbGEudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY1NjI5MDI2OSwiZXhwIjoxNjU2Mzc2NjY5LCJhenAiOiI4NmRaVHZsQkdESjRNRW9vNVRkV1ZrbU9ueUFiTFRRRyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJkZWxldGU6ZXZlbnQiLCJkZWxldGU6aW5mbyIsImRlbGV0ZTp1c2VyIiwicGF0Y2g6ZXZlbnQiLCJwYXRjaDppbmZvIiwicGF0Y2g6bG9jYXRpb24iLCJwb3N0OmV2ZW50IiwicG9zdDppbmZvIiwicG9zdDpsb2NhdGlvbiIsInJlYWQ6bG9jYXRpb24iLCJyZWFkOnBsYW5ldGFyeWhvdXJzIiwicmVhZDpwbGFubmVyIiwicmVhZDp1c2VycyIsInRlc3Q6dGVzdCJdfQ.JqAqId4Nc6hHvne28ZCaiZL7dzjk86_HqBjMKIcIAHi3bRkkyEzcIfeFRMnAVROtCasW4p5ilk4Plw3t04gSMmh-W5tgY-xLeHHMeAj15abVEDE23tAM25hoPGU_ieZ0HhibGzSgdFHvx-BdpB52yVwNdBBNP2TiELnaHxlWCDvqA_cnlpuh5hGz4Og-aNkfoR7w6hmVahNfqZPNI7x5y_COn1Z2R3jzLtUSxRpzsPo8q_I-jYCPn8PwBKAKC0TJKPf2OUCoBnPodELIkBWvgUO_SPA-zMcLIu9Tepl1fEL8wLmiP_N2XCRKB-VzHc3Z-pUepzguWTCA98rI8KlATA'
+        self.client_token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkxPeGtOeXViVk42TXhDRFBYcjRxUyJ9.eyJpc3MiOiJodHRwczovL3BsYS51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjJiMGY3OTFmMzNmNmQ5NzQ2MDc1MDZjIiwiYXVkIjpbInBsYW5ldGFyeXBsYW5uZXIvYXBpIiwiaHR0cHM6Ly9wbGEudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY1NjI5NDIwMCwiZXhwIjoxNjU2MzgwNjAwLCJhenAiOiI4NmRaVHZsQkdESjRNRW9vNVRkV1ZrbU9ueUFiTFRRRyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJkZWxldGU6ZXZlbnQiLCJwYXRjaDpldmVudCIsInBhdGNoOmxvY2F0aW9uIiwicG9zdDpldmVudCIsInBvc3Q6bG9jYXRpb24iLCJyZWFkOmxvY2F0aW9uIiwicmVhZDpwbGFuZXRhcnlob3VycyIsInJlYWQ6cGxhbm5lciJdfQ.gCYZysDEv2c3wC6Av114VhgX5CnC-kdZHss9AxDY2RXagobZqyfpuVgWjG7SvFU3gW0SGBrakHcRoTkwaPg0fHWxdJd65B1lQPcPraiDo7_R0ZTt2fIe7JhbxTi3AfKH4XQrtsOad7cSzQ7-t0fydnDfwxkzOat-3gtRGDfWz7doDxGwuBJ3KGqd0HmKQgvyvHJmhqmoI3PGTgx_udkn-wpWgPZNlrgyOeiQI4sTuSNuMC383w286GrbUNYf-z8PVuZ7OAltSZyqU-tzeYi5o9EakheVsgE_8rSSGJphJWaMwpllf5l-8D1SCkmtICEfklZ2hm-5BNhh4DC-y7Q0WQ'
         setup_db(self.app, self.database_path)
 
-        # self.new_question = {"question": "TEST What color is the sky?",
-        #                      "answer": "TEST blue",
-        #                      "difficulty": 1,
-        #                      "category": 1}
-        # self.new_bad_question = {"question": "TEST What color is the sky?",
-        #                          "difficulty": 1,
-        #                          "category": 1}
+        self.new_location = {"city": "Berlin",
+                             "region": "MY ASS",
+                             "timezone": "Europe/Berlin",
+                             "latitude": 52.520008,
+                             "longitude": 13.404954}
 
+        self.new_bad_event = {"date": "22/22/22",
+                              "hour": 22,
+                              }
+        self.new_good_event = {"date": "2/22/22",
+                               "hour": 22,
+                               }
+
+        self.new_patch_event = {"date": "2/22/22",
+                                "hour": 23,
+                                }
         # binds the app to the current context
         with self.app.app_context():
             self.db = SQLAlchemy()
@@ -64,148 +72,299 @@ class APITestCase(TestCase):
     Write at least one test for each test for successful operation and for expected errors.
     """
 
-    # GET, Questions
-    # Endpoint: '/questions[?pages=num]', Method: GET
-    def test_get_users(self):
-        res = self.client().get("/users", follow_redirects=True)
-        data = json.loads(res.data)
-        self.assertEqual(res.status_code, 401)
-        self.assertEqual(data["success"], False)
-        # self.assertTrue(data["users"])
-        # self.assertTrue(data["users"]["username"])
-        # self.assertTrue(data["users"]["id"])
+    # Admin
+    # get_users DONE
+    # get_events DONE,DONE
+    # get_planetary_hours DONE,DONE
+    # get_location DONE,DONE
+    # store_location DONE,DONE
+    # post_event DONE,DONE
+    # patch_event DONE, DONE
+    # delete_user DONE,DONE
+    # delete_event DONE, DONE
 
-    # Endpoint: `/questions?page=num`, Method: GET
-    def test_get_locations(self):
-        res = self.client().get("/users/16/location", follow_redirects=True)
+    def test_admin_get_users(self):
+        res = self.client().get("/users", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token_token)})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data["success"], True)
+        self.assertTrue(data["success"])
+
+    def test_admin_get_locations_success(self):
+        res = self.client().get("/users/22/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
         self.assertTrue(data["location"])
-    def test_get_locations_404(self):
-        res = self.client().get("/users/777/location", follow_redirects=True)
+
+    def test_admin_get_locations_fail(self):
+        res = self.client().get("/users/777/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(data["success"], False)
+        self.assertFalse(data["success"])
         self.assertTrue(data["message"])
 
-    def test_get_planetary_hours(self):
-        res = self.client().get("/users/16/planetaryhours", follow_redirects=True)
+    def test_admin_get_events_success(self):
+        res = self.client().get("/users/22/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(data["success"], True)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["user"])
+
+    def test_admin_get_events_fail(self):
+        res = self.client().get("/users/2222222/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+        self.assertTrue(data["message"])
+
+    def test_admin_get_planetary_hours_success(self):
+        res = self.client().get("/users/22/planetaryhours", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
         self.assertTrue(data["planetary_hours"])
 
-    def test_404_get_planetary_hours(self):
-        res = self.client().get("/users/777/planetaryhours", follow_redirects=True)
+    def test_admin_get_planetary_hours_fail(self):
+        res = self.client().get("/users/777/planetaryhours", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(data["success"], False)
+        self.assertFalse(data["success"])
         self.assertTrue(data["message"])
 
-    #
-    # # GET, Categories:
-    # # Endpoint: '/categories', Method: GET
-    # def test_get_categories(self):
-    #     res = self.client().get("/categories", follow_redirects=True)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data["success"], True)
-    #     self.assertTrue(data["categories"])
-    #
-    # # Endpoint: '/categories/{id}', Method: GET
-    # def test_get_category(self):
-    #     res = self.client().get("/categories/5", follow_redirects=True)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 422)
-    #     self.assertEqual(data["success"], False)
-    #
-    # def test_get_questions_for_category(self):
-    #     res = self.client().get("/categories/1/questions", follow_redirects=True)
-    #     print(res.data)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data["success"], True)
-    #     self.assertTrue(len(data["questions"]))
-    #     self.assertTrue(data["totalQuestions"])
-    #     self.assertTrue(data["currentCategory"])
-    #
-    # def test_get_questions_for_invalid_category(self):
-    #     res = self.client().get("/categories/100000/questions", follow_redirects=True)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 404)
-    #     self.assertEqual(data["success"], False)
-    #     self.assertEqual(data["message"], "Resource not found")
-    #
-    # # POST, Questions:
-    # def test_post_new_question(self):
-    #     res = self.client().post("/questions", follow_redirects=True, json=self.new_question)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertEqual(data["success"], True)
-    #     self.assertTrue(data["question"])
-    #     self.assertTrue(data["answer"])
-    #     self.assertTrue(data["difficulty"])
-    #     self.assertTrue(data["category"])
-    #
-    # def test_422_post_new_question_not_allowed(self):
-    #     res = self.client().post("/questions", follow_redirects=True, json=self.new_bad_question)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 422)
-    #     self.assertEqual(data["success"], False)
-    #     self.assertEqual(data["message"], "Unprocessable Entity")
-    #
-    # def test_search_for_questions(self):
-    #     res = self.client().post("/questions", follow_redirects=True, json={"searchTerm": "Title"})
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertTrue(data['success'])
-    #     self.assertTrue(len(data['questions']))
-    #     self.assertTrue(data['totalQuestions'])
-    #     self.assertIsNone(data['currentCategory'])
-    #
-    # def test_search_for_questions_returns_no_quetions(self):
-    #     res = self.client().post("/questions", follow_redirects=True, json={"searchTerm": "Title0000000000000"})
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertTrue(data['success'])
-    #     self.assertFalse(len(data['questions']))
-    #     self.assertFalse(data['totalQuestions'])
-    #     self.assertIsNone(data['currentCategory'])
-    #
-    # def test_quizz_with_cat(self):
-    #     res = self.client().post("/quizzes", follow_redirects=True,
-    #                              json={"previous_questions": [1, 2, 3], "quiz_category": {"id": 2}})
-    #     data = json.loads(res.data)
-    #     self.assertTrue(data['success'])
-    #     self.assertTrue(data['question'])
-    #
-    # def test_quizz_without_cat(self):
-    #     res = self.client().post("/quizzes", follow_redirects=True,
-    #                              json={"previous_questions": [1, 2, 3], "quiz_category": {"id": 0}})
-    #     data = json.loads(res.data)
-    #     self.assertTrue(data['success'])
-    #     self.assertTrue(data['question'])
-    #
-    # def test_delete_success(self):
-    #     prev_res = self.client().get("/questions", follow_redirects=True)
-    #     prev_total = (json.loads(prev_res.data))['totalQuestions']
-    #     res = self.client().delete("/questions/16", follow_redirects=True)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 200)
-    #     self.assertTrue(data['success'])
-    #     self.assertEqual(data["totalQuestions"], prev_total - 1)
-    #     self.assertTrue(len(data["questions"]))
-    #     self.assertTrue(len(data["categories"]))
-    #     self.assertIsNone(data["currentCategory"])
-    #
-    # def test_delete_fail(self):
-    #     res = self.client().delete("/questions/1600", follow_redirects=True)
-    #     data = json.loads(res.data)
-    #     self.assertEqual(res.status_code, 404)
-    #     self.assertFalse(data["success"])
-    #     self.assertEqual(data["message"], "Resource not found")
-    #
+    def test_admin_store_location_success(self):
+        res = self.client().post("/users/22/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)}, json=self.new_location)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["location"])
+
+    # TODO write more test cases ... in the future ;)
+    def test_admin_store_location_fail_conflict(self):
+        res = self.client().post("/users/22/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)}, json=self.new_location)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 409)
+        self.assertFalse(data["success"])
+
+    def test_admin_post_event_success(self):
+        res = self.client().post("/users/22/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)}, json=self.new_good_event)
+        data = json.loads(res.data)
+        print(data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["event"])
+
+    def test_admin_post_event_fail(self):
+        res = self.client().post("/users/22/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)}, json=self.new_bad_event)
+        data = json.loads(res.data)
+        print(data)
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(data["success"])
+
+    def test_admin_patch_event_success(self):
+        res = self.client().patch("/events/18", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)}, json=self.new_patch_event)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["event"])
+
+    def test_admin_patch_event_fail(self):
+        res = self.client().patch("/events/1600", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)}, json=self.new_patch_event)
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+
+        # TODO (For reviewer, change event id)
+
+    def test_admin_delete_event_success(self):
+        res = self.client().delete("/events/19", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+
+    def test_admin_delete_event_fail(self):
+        res = self.client().delete("/events/1600", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+
+        # TODO (For reviewer, change user id)
+
+    def test_admin_delete_user_success(self):
+        res = self.client().delete("/users/24", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+
+    def test_admin_delete_user_fail(self):
+        res = self.client().delete("/users/1600", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+
+    # Client
+    # get_users DONE
+    # get_events DONE,DONE
+    # get_planetary_hours DONE,DONE
+    # get_location DONE,DONE
+    # store_location DONE,DONE
+    # post_event DONE,DONE
+    # patch_event DONE, DONE
+    # delete_user DONE
+    # delete_event DONE, DONE
+
+    def test_client_get_users(self):
+        res = self.client().get("/users", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 403)
+        self.assertFalse(data["success"])
+
+    def test_client_get_locations_success(self):
+        res = self.client().get("/users/22/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["location"])
+
+    def test_client_get_locations_fail(self):
+        res = self.client().get("/users/777/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+        self.assertTrue(data["message"])
+
+    def test_client_get_events_success(self):
+        res = self.client().get("/users/22/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["user"])
+
+    def test_client_get_events_fail(self):
+        res = self.client().get("/users/2222222/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+        self.assertTrue(data["message"])
+
+    def test_client_get_planetary_hours_success(self):
+        res = self.client().get("/users/22/planetaryhours", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["planetary_hours"])
+
+    def test_client_get_planetary_hours_fail(self):
+        res = self.client().get("/users/777/planetaryhours", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+        self.assertTrue(data["message"])
+
+    def test_client_store_location_success(self):
+        res = self.client().post("/users/22/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)}, json=self.new_location)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["location"])
+
+    # TODO write more test cases ... in the future ;)
+    def test_client_store_location_fail_conflict(self):
+        res = self.client().post("/users/22/location", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)}, json=self.new_location)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 409)
+        self.assertFalse(data["success"])
+
+    def test_client_post_event_success(self):
+        res = self.client().post("/users/22/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)}, json=self.new_good_event)
+        data = json.loads(res.data)
+        print(data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["event"])
+
+    def test_client_post_event_fail(self):
+        res = self.client().post("/users/22/events", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)}, json=self.new_bad_event)
+        data = json.loads(res.data)
+        print(data)
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(data["success"])
+
+    def test_client_patch_event_success(self):
+        res = self.client().patch("/events/20", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)}, json=self.new_patch_event)
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data["success"])
+        self.assertTrue(data["event"])
+
+    def test_client_patch_event_fail(self):
+        res = self.client().patch("/events/1600", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)}, json=self.new_patch_event)
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+
+        # TODO (For reviewer, change event id)
+
+    def test_client_delete_event_success(self):
+        res = self.client().delete("/events/20", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+
+    def test_client_delete_event_fail(self):
+        res = self.client().delete("/events/1600", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 404)
+        self.assertFalse(data["success"])
+
+        # TODO (For reviewer, change user id)
+
+    def test_client_delete_user_success_auth_error(self):
+        res = self.client().delete("/users/24", follow_redirects=True, headers={
+            'Authorization': 'Bearer {}'.format(self.client_token)})
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 403)
+        self.assertFalse(data['success'])
 
 # Make the tests conveniently executable
-

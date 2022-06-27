@@ -1,9 +1,10 @@
 import os
 
 from astral import LocationInfo
-from pytz import timezone
+
+from datetime import timezone
 from sqlalchemy import Column, String, Integer, create_engine, ForeignKey, Float, DateTime, Boolean
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from flask_sqlalchemy import SQLAlchemy
 
 from os import environ as env
@@ -45,8 +46,8 @@ class User(db.Model):
 
     id = Column(Integer, primary_key=True, unique=True)
     username = Column(String, unique=True, nullable=False)
-    location = relationship("Location", back_populates="username", uselist=False)
-    events = relationship("Events", back_populates="username")
+    location = relationship("Location", back_populates="username", uselist=False,cascade='delete')
+    events = relationship("Events", back_populates="username",cascade='delete')
 
     def __init__(self, username):
         self.username = username
@@ -69,8 +70,8 @@ class User(db.Model):
         return {
             'id': self.id,
             'username': self.username,
-            'location': self.location.format_for_users(),
-            'events': [event.format_for_users() for event in self.events],
+            'location': self.location.format_for_users() if self.location else None,
+            'events': [event.format_for_users() for event in self.events] if self.events else None,
         }
 
 
@@ -89,8 +90,8 @@ class Location(db.Model):
     timezone = Column(String, nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-    username = relationship("User", back_populates="location", uselist=False)
-    events = relationship("Events",back_populates="location")
+    username = relationship("User", back_populates="location",  uselist=False)
+    events = relationship("Events",back_populates="location", cascade='delete')
 
     def __init__(self, user_id, city, region, timezone, latitude, longitude):
         self.user_id = user_id
@@ -147,35 +148,36 @@ class Events(db.Model):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey(User.id), nullable=False)
     location_id = Column(Integer, ForeignKey(Location.id), nullable=False)
-    # stored in UTC
+    #No timezeone in timestamps
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
+    #Description CAN BE null, by design
     description = Column(String)
     # when making new event, set time as busy
     busy = Column(Boolean, default=True)
     planet = Column(String, nullable=False)
     hour = Column(Integer,nullable=False)
-    username = relationship("User", back_populates="events", uselist=False)
-    location = relationship("Location", back_populates="events", uselist=False)
+    username = relationship("User", back_populates="events", )
+    location = relationship("Location", back_populates="events", )
 
     def __init__(self, user_id, location_id,start_time,end_time, description, planet,hour,busy=True):
         self.user_id =  user_id
         self.location_id = location_id
-        self.start_time = start_time
-        self.end_time = end_time
+        self.start_time = start_time.replace(tzinfo=None)
+        self.end_time = end_time.replace(tzinfo=None)
         self.description = description
         self.busy = busy
         self.planet = planet
         self.hour= hour
 
     def __repr__(self):
-        return f'<Event {self.id}: {self.start_time.replace(tzinfo=timezone(self.location.timezone))} to {self.end_time.replace(tzinfo=timezone(self.location.timezone))}({self.planet}),{self.description},{self.busy}>'
+        return f'<Event {self.id}: {(self.start_time)} to {(self.end_time)}({self.planet}),{self.description},{self.busy}>'
 
     def format_for_users(self):
         return {
             'id': self.id,
-            'start_time': self.start_time.replace(tzinfo=timezone(self.location.timezone)),
-            'end_time': self.end_time.replace(tzinfo=timezone(self.location.timezone)),
+            'start_time': self.start_time,
+            'end_time': self.end_time,
             'planet': self.planet,
             'description': self.description,
             'busy': self.busy,
@@ -197,8 +199,8 @@ class Events(db.Model):
             'id': self.id,
             'user_id':self.user_id,
             'location_id':self.location_id,
-            'start_time': self.start_time.replace(tzinfo=timezone(self.location.timezone)),
-            'end_time': self.end_time.replace(tzinfo=timezone(self.location.timezone)),
+            'start_time': self.start_time,
+            'end_time': self.end_time,
             'planet': self.planet,
             'description': self.description,
             'busy': self.busy,

@@ -31,25 +31,25 @@ with open("planetaryhours.json") as file:
 astral_db = database()
 
 
-def my_location(name, region, tz, lat, long):
+def check_location(name, region, tz, lat, long):
     """
     helper function to make sure data to grab sunrise/sunset from astral module is correct
-    takes in data for location, returns astral.LocationInfo obj
+    takes in data for location, returns book
     :param name: City name
     :param region: Region name
     :param tz: timezone Continent/City
     :param lat: latitude
     :param long: longitude
-    :return: LocationInfo object to get sunrise and sunset from
+    :return: True or false
     """
     if not (-90 <= lat <= 90):
-        raise ValueError("Latitude out of bounds", lat)
+        return False
     elif not (-180 <= long <= 180):
-        raise ValueError("Longitude out of bounds", long)
+        return False
     elif tz not in pytz.all_timezones:
-        raise pytz.UnknownTimeZoneError("Timezone unknown, format is Continent/City", tz)
+        return False
     else:
-        return LocationInfo(name, region, tz, lat, long)
+        return True
 
 
 def planetary_hours(date, sunrise, sunset, daylight_hours, night_hours):
@@ -100,17 +100,13 @@ def get_adjusted_hours(location, date=datetime.today(),tz=False):
     night_hours = night_seconds / 12
     sunrise = s['sunrise']
     sunset = s['sunset']
-    # if tz:
-    #     timezone=pytz.timezone(location.timezone)
-    #     date = timezone.localize(date)
-    #     sunrise = timezone.localize(sunrise)
-    #     sunset = timezone.localize(sunset)
+
 
     logging.debug(
         f"{str(date)}\nday:{str(daylight_hours), str(daylight_seconds)}\nnight:{str(night_hours), str(night_seconds)}")
 
-    return({"date":(str(date)),'yesterday':adjusted,
-         'planetaryhours':planetary_hours(date, sunrise, sunset, daylight_hours, night_hours)})
+    return({"date":(date),'yesterday':adjusted,
+         'planetaryhours':planetary_hours(date, sunrise.replace(tzinfo=None), sunset, daylight_hours, night_hours)})
 
 
 def check_city(name):
