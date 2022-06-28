@@ -159,7 +159,6 @@ def get_planetary_hours(permission, id):
 @requires_auth('read:location')
 def get_location(permission, id):
     location = Location.query.filter_by(user_id=id).one_or_none()
-    print(location)
     if location:
         return jsonify({'success': True,
                         'location': location.format()})
@@ -174,16 +173,13 @@ def store_location(permission, id):
 
     # print(result.get('city'))
     if not User.query.get(id):
-        print("user not found")
         abort(404)
     location = Location.query.filter_by(user_id=id).all()
-    print(location)
     if not location:
         # only passing city
         if (len(result.keys()) == 1 and result.get('city', None)):
             location = check_city(result.get('city'))
             if not location:
-                print("city not found")
                 abort(404, {'message': "city search returned no results, please pass full location JSON data"})
             else:
                 location = Location(user_id=id, city=location.name, region=location.region, timezone=location.timezone
@@ -223,10 +219,10 @@ def post_event(permission, id):
     date = result.get('date', None)
     description = result.get('description', None)
     busy = result.get('busy', True)
-    if not date or not hour:
+    if not date or hour is None:
         abort(400, {'message': "date or hour missing"})
-    if hour < 0 or hour > 24:
-        abort(400, {'message': "hour out of bounds should be between [0,23]"})
+    if hour < 0 or hour > 23:
+        abort(400, {'message': "hour out of bounds should be between [1,24]"})
 
     # TODO improve error handling here (do not allow location to be stored if it's not lligble
     try:
@@ -252,7 +248,6 @@ def post_event(permission, id):
 @requires_auth('patch:event')
 def patch_event(permission, id):
     response = request.get_json()
-    print(response)
     event = Events.query.get(id)
 
     if not event:
@@ -261,7 +256,7 @@ def patch_event(permission, id):
     date = response.get('date', None)
     description = response.get('description', None)
     busy = response.get('busy', None)
-    if hour < 0 or hour > 24:
+    if hour < 0 or hour > 23:
         abort(400, {'message': "hour out of bounds should be between [0,23]"})
     if date and hour:
         hours = get_adjusted_hours(event.location.get_LocationInfo(), dateutil.parser.parse(date))

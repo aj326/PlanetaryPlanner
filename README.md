@@ -6,6 +6,8 @@ This project is a planner based on the [planetary hours](https://en.wikipedia.or
 What motivated me to dream this up is my recent fascination with the planets and the stars. Developing this code has helped appreciate python's ease quite a bit. The way Python handles dates is user-friendly, and the available modules, like [astral](https://pypi.org/project/astral/), and [pytz](https://pypi.org/project/pytz/) **greatly** sped up development time.
 ## URL
 
+https://planetary-planner.herokuapp.com
+
 ### Install Dependencies
 
 1. **Python 3.10** - Follow instructions to install the latest version of python for your platform in the [python docs](https://docs.python.org/3/using/unix.html#getting-and-installing-the-latest-version-of-python)
@@ -29,7 +31,7 @@ psql < test_planetary_planner.psql
  
 ### Authentication
 There are two roles: admin and client. For testing porpuses, I set up two accounts:
-- Admin - admin@test.com
+- Admin - admin@test.com PA$$word
 - Client - client@test.com
 
 The root dir of the server will show you the access token to use in [unit testing module:39](./test_all.py):

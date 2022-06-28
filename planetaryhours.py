@@ -118,4 +118,4 @@ def check_city(name):
 
 
 # add_locations("Somewhere,Secret Location,UTC,24°28'N,39°36'E", db)
-print(get_adjusted_hours(check_city("riyadh"), datetime(2022, 6, 20, 2)))
+# print(get_adjusted_hours(check_city("riyadh"), datetime(2022, 6, 20, 2)))
