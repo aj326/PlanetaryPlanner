@@ -347,4 +347,4 @@ def conflict_error(e):
 
 
 if __name__ == "__main__":
-    app.run(port=env.get("PORT", 3000))
+    app.run()
