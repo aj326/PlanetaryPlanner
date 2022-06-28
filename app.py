@@ -45,6 +45,7 @@ app.secret_key = env.get("APP_SECRET_KEY")
 oauth = OAuth(app)
 setup_db(app)
 migrate = Migrate(app, db, compare_type=True)
+
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 oauth.register(
