@@ -2,19 +2,14 @@ import os
 
 from astral import LocationInfo
 
-from datetime import timezone
 from sqlalchemy import Column, String, Integer, create_engine, ForeignKey, Float, DateTime, Boolean
 from sqlalchemy.orm import relationship, backref
 from flask_sqlalchemy import SQLAlchemy
 
 from os import environ as env
 
-import json
-from dotenv import find_dotenv, load_dotenv
 
-ENV_FILE = find_dotenv()
-if ENV_FILE:
-    load_dotenv(ENV_FILE)
+
 
 database_name = env.get('DATABASE_NAME')
 database_path = env.get('DATABASE_URL')

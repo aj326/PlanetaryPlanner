@@ -3,9 +3,8 @@
 
 import json
 import logging
-import os
-from datetime import datetime, date
 from os import environ as env
+from datetime import datetime, date
 from urllib.parse import quote_plus, urlencode
 
 import dateutil.parser
@@ -27,8 +26,7 @@ from planetaryhours import check_city, get_adjusted_hours, check_location
 logging.basicConfig(level=env.get("LOGLEVEL", "INFO"), format='%(levelname)s - %(message)s')
 
 
-# TODO Auth0 is set up and running at the time of submission. All required configuration settings are included in a
-#  bash file which export:
+
 class MyJSONEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, date):
