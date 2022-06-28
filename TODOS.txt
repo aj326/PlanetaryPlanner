@@ -1,0 +1,3 @@
+
+TODO figure out how to give user access only to their details in db
+TODO planetary hours for anyone -- anyone can pass location [and date] and get hours

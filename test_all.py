@@ -67,10 +67,7 @@ class APITestCase(TestCase):
         """Executed after reach test"""
         pass
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
+
 
     # Admin
     # get_users DONE
