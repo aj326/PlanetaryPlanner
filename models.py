@@ -14,7 +14,7 @@ from os import environ as env
 database_name = env.get('DATABASE_NAME')
 database_path = env.get('DATABASE_URL')
 if database_path.startswith("postgres://"):
-    uri = database_path.replace("postgres://", "postgresql://", 1)
+    database_path = database_path.replace("postgres://", "postgresql://", 1)
 # TODO Ask help about database optimization/setup ... whether my current set up makes sense
 db = SQLAlchemy()
 
