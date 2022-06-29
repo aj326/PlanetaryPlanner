@@ -38,203 +38,49 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
 --
--- Name: Events; Type: TABLE; Schema: public; Owner: postgres
+-- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public."Events" (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    location_id integer NOT NULL,
-    description character varying,
-    busy boolean,
-    planet character varying NOT NULL,
-    start_time timestamp without time zone NOT NULL,
-    end_time timestamp without time zone NOT NULL,
-    hour integer NOT NULL
-);
-
-
-ALTER TABLE public."Events" OWNER TO postgres;
-
---
--- Name: Events_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."Events_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."Events_id_seq" OWNER TO postgres;
-
---
--- Name: Events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."Events_id_seq" OWNED BY public."Events".id;
-
-
---
--- Name: Location; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public."Location" (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    city character varying,
-    region character varying,
-    timezone character varying NOT NULL,
-    latitude double precision NOT NULL,
-    longitude double precision NOT NULL
-);
-
-
-ALTER TABLE public."Location" OWNER TO postgres;
-
---
--- Name: Location_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."Location_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."Location_id_seq" OWNER TO postgres;
-
---
--- Name: Location_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."Location_id_seq" OWNED BY public."Location".id;
-
-
---
--- Name: User; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public."User" (
-    id integer NOT NULL,
-    username character varying NOT NULL
-);
-
-
-ALTER TABLE public."User" OWNER TO postgres;
-
---
--- Name: User_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."User_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."User_id_seq" OWNER TO postgres;
-
---
--- Name: User_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."User_id_seq" OWNED BY public."User".id;
-
-
---
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.alembic_version (
-    version_num character varying(32) NOT NULL
-);
-
-
-ALTER TABLE public.alembic_version OWNER TO postgres;
-
---
--- Name: Events id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Events" ALTER COLUMN id SET DEFAULT nextval('public."Events_id_seq"'::regclass);
-
-
---
--- Name: Location id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Location" ALTER COLUMN id SET DEFAULT nextval('public."Location_id_seq"'::regclass);
-
-
---
--- Name: User id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."User" ALTER COLUMN id SET DEFAULT nextval('public."User_id_seq"'::regclass);
-
-
---
--- Data for Name: Events; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) FROM stdin;
-\.
+INSERT INTO public."User" (id, username) VALUES (22, 'email@email.com');
+INSERT INTO public."User" (id, username) VALUES (23, 'testme@this.com');
 
 
 --
 -- Data for Name: Location; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."Location" (id, user_id, city, region, timezone, latitude, longitude) FROM stdin;
-\.
+INSERT INTO public."Location" (id, user_id, city, region, timezone, latitude, longitude) VALUES (25, 22, 'Chicago', 'USA', 'US/Central', 41.833333333333336, -87.68333333333334);
 
 
 --
--- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: Events; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."User" (id, username) FROM stdin;
-22	ahmed.jehairan@protonmail.com
-23	testme@this.com
-\.
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (17, 22, 25, 'Let''s see', true, 'Mars', '2022-06-23 06:32:42.845341', '2022-06-23 07:48:46.31856', 1);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (18, 22, 25, 'client demo event', true, 'Mercury', '2022-06-29 05:18:53.164625', '2022-06-29 06:34:46.251439', 0);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (19, 22, 25, 'client demo event', true, 'Venus', '2022-06-30 04:35:12.215201', '2022-06-30 05:19:21.488729', 23);
 
 
 --
 -- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.alembic_version (version_num) FROM stdin;
-8c74e7258582
-\.
+INSERT INTO public.alembic_version (version_num) VALUES ('8c74e7258582');
 
 
 --
 -- Name: Events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Events_id_seq"', 16, true);
+SELECT pg_catalog.setval('public."Events_id_seq"', 19, true);
 
 
 --
 -- Name: Location_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Location_id_seq"', 24, true);
+SELECT pg_catalog.setval('public."Location_id_seq"', 25, true);
 
 
 --
@@ -242,78 +88,6 @@ SELECT pg_catalog.setval('public."Location_id_seq"', 24, true);
 --
 
 SELECT pg_catalog.setval('public."User_id_seq"', 23, true);
-
-
---
--- Name: Events Events_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Events"
-    ADD CONSTRAINT "Events_pkey" PRIMARY KEY (id);
-
-
---
--- Name: Location Location_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Location"
-    ADD CONSTRAINT "Location_pkey" PRIMARY KEY (id);
-
-
---
--- Name: User User_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."User"
-    ADD CONSTRAINT "User_id_key" UNIQUE (id);
-
-
---
--- Name: User User_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."User"
-    ADD CONSTRAINT "User_pkey" PRIMARY KEY (id);
-
-
---
--- Name: User User_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."User"
-    ADD CONSTRAINT "User_username_key" UNIQUE (username);
-
-
---
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.alembic_version
-    ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
-
-
---
--- Name: Events Events_location_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Events"
-    ADD CONSTRAINT "Events_location_id_fkey" FOREIGN KEY (location_id) REFERENCES public."Location"(id);
-
-
---
--- Name: Events Events_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Events"
-    ADD CONSTRAINT "Events_user_id_fkey" FOREIGN KEY (user_id) REFERENCES public."User"(id);
-
-
---
--- Name: Location Location_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."Location"
-    ADD CONSTRAINT "Location_user_id_fkey" FOREIGN KEY (user_id) REFERENCES public."User"(id);
 
 
 --

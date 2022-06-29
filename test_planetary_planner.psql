@@ -17,15 +17,15 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: postgres; Type: DATABASE; Schema: -; Owner: postgres
+-- Name: test_planetary_planner; Type: DATABASE; Schema: -; Owner: postgres
 --
 
-CREATE DATABASE postgres WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'en_US.UTF-8';
+CREATE DATABASE test_planetary_planner WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'en_US.UTF-8';
 
 
-ALTER DATABASE postgres OWNER TO postgres;
+ALTER DATABASE test_planetary_planner OWNER TO postgres;
 
-\connect postgres
+\connect test_planetary_planner
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -39,106 +39,61 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: DATABASE postgres; Type: COMMENT; Schema: -; Owner: postgres
+-- Data for Name: User; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COMMENT ON DATABASE postgres IS 'default administrative connection database';
-
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
---
--- Name: People; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public."People" (
-    id integer NOT NULL,
-    name character varying,
-    catchphrase character varying
-);
-
-
-ALTER TABLE public."People" OWNER TO postgres;
-
---
--- Name: People_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public."People_id_seq"
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public."People_id_seq" OWNER TO postgres;
-
---
--- Name: People_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public."People_id_seq" OWNED BY public."People".id;
+INSERT INTO public."User" (id, username) VALUES (22, 'testing0');
+INSERT INTO public."User" (id, username) VALUES (25, 'testing1');
+INSERT INTO public."User" (id, username) VALUES (27, 'testing2');
+INSERT INTO public."User" (id, username) VALUES (28, 'testing3');
 
 
 --
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: postgres
+-- Data for Name: Location; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.alembic_version (
-    version_num character varying(32) NOT NULL
-);
-
-
-ALTER TABLE public.alembic_version OWNER TO postgres;
-
---
--- Name: People id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."People" ALTER COLUMN id SET DEFAULT nextval('public."People_id_seq"'::regclass);
+INSERT INTO public."Location" (id, user_id, city, region, timezone, latitude, longitude) VALUES (28, 22, 'Berlin', 'Europe', 'Europe/Berlin', 52.520008, 13.404954);
 
 
 --
--- Data for Name: People; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: Events; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public."People" (id, name, catchphrase) FROM stdin;
-\.
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (23, 22, 28, NULL, true, 'Venus', '2022-02-22 04:52:14.992857', '2022-02-22 06:00:28.524533', 22);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (24, 22, 28, NULL, true, 'Venus', '2022-02-22 04:52:14.992857', '2022-02-22 06:00:28.524533', 22);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (25, 22, 28, NULL, true, 'Venus', '2022-02-22 04:52:14.992857', '2022-02-22 06:00:28.524533', 22);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (26, 22, 28, NULL, true, 'Venus', '2022-02-22 04:52:14.992857', '2022-02-22 06:00:28.524533', 22);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (27, 22, 28, NULL, true, 'Venus', '2022-02-22 04:52:14.992857', '2022-02-22 06:00:28.524533', 22);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (28, 22, 28, NULL, true, 'Venus', '2022-02-22 04:52:14.992857', '2022-02-22 06:00:28.524533', 22);
+INSERT INTO public."Events" (id, user_id, location_id, description, busy, planet, start_time, end_time, hour) VALUES (29, 22, 28, NULL, true, 'Venus', '2022-02-22 04:52:14.992857', '2022-02-22 06:00:28.524533', 22);
 
 
 --
 -- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.alembic_version (version_num) FROM stdin;
-\.
+INSERT INTO public.alembic_version (version_num) VALUES ('8c74e7258582');
 
 
 --
--- Name: People_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+-- Name: Events_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."People_id_seq"', 1, false);
-
-
---
--- Name: People People_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public."People"
-    ADD CONSTRAINT "People_pkey" PRIMARY KEY (id);
+SELECT pg_catalog.setval('public."Events_id_seq"', 29, true);
 
 
 --
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: Location_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.alembic_version
-    ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
+SELECT pg_catalog.setval('public."Location_id_seq"', 28, true);
+
+
+--
+-- Name: User_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public."User_id_seq"', 28, true);
 
 
 --

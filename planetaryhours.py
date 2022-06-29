@@ -16,9 +16,6 @@ from astral import LocationInfo
 from enum import Enum
 from os import environ as env
 
-ENV_FILE = find_dotenv()
-if ENV_FILE:
-    load_dotenv(ENV_FILE)
 
 logging.basicConfig(level=env.get("LOGLEVEL", "INFO"), format='%(levelname)s - %(message)s')
 
@@ -34,7 +31,7 @@ astral_db = database()
 def check_location(name, region, tz, lat, long):
     """
     helper function to make sure data to grab sunrise/sunset from astral module is correct
-    takes in data for location, returns book
+    takes in data for location, returns bool
     :param name: City name
     :param region: Region name
     :param tz: timezone Continent/City
@@ -42,14 +39,7 @@ def check_location(name, region, tz, lat, long):
     :param long: longitude
     :return: True or false
     """
-    if not (-90 <= lat <= 90):
-        return False
-    elif not (-180 <= long <= 180):
-        return False
-    elif tz not in pytz.all_timezones:
-        return False
-    else:
-        return True
+    return (-90 <= lat <= 90) and (-180 <= long <= 180) and tz in pytz.all_timezones
 
 
 def planetary_hours(date, sunrise, sunset, daylight_hours, night_hours):

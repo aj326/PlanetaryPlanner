@@ -1,5 +1,5 @@
 import json
-from unittest import TestCase
+from unittest import TestCase,main
 
 import pytz
 from astral import LocationInfo
@@ -12,19 +12,16 @@ from planetaryhours import check_location
 
 class PlanetaryHourTest(TestCase):
     def test_check_location_lat1(self):
-        with self.assertRaises(ValueError):
-            check_location("test1", "T", "Asia/Riyadh", -97, 55)
+        self.assertFalse(check_location("test1", "T", "Asia/Riyadh", -97, 55))
 
     def test_check_location_long(self):
-        with self.assertRaises(ValueError):
-            check_location("test1", "T", "Asia/Riyadh", -90, -555)
+        self.assertFalse(check_location("test1", "T", "Asia/Riyadh", -90, -555))
 
     def test_check_location_tz(self):
-        with self.assertRaises(pytz.UnknownTimeZoneError):
-            check_location("test1", "T", "Asia/Riyadhhhhhhh", -90, -55)
+        self.assertFalse(check_location("test1", "T", "Asia/Riyadhhhhhhh", -90, -55))
 
     def test_check_location(self):
-        self.assertIsInstance(check_location("test1", "T", "Asia/Riyadh", -90, -55), LocationInfo)
+        self.assertTrue(check_location("test1", "T", "Asia/Riyadh", -90, -55))
 
 
 class APITestCase(TestCase):
@@ -36,12 +33,16 @@ class APITestCase(TestCase):
         self.client = self.app.test_client
         self.database_name = "test_planetary_planner"
         self.database_path = "postgresql://{}/{}".format('postgres:abc@localhost:5432', self.database_name)
-        self.admin_token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkxPeGtOeXViVk42TXhDRFBYcjRxUyJ9.eyJpc3MiOiJodHRwczovL3BsYS51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjJhZTkxY2E1NjM5ZjhkNGFkMjFjOWIxIiwiYXVkIjpbInBsYW5ldGFyeXBsYW5uZXIvYXBpIiwiaHR0cHM6Ly9wbGEudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY1NjI5MDI2OSwiZXhwIjoxNjU2Mzc2NjY5LCJhenAiOiI4NmRaVHZsQkdESjRNRW9vNVRkV1ZrbU9ueUFiTFRRRyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJkZWxldGU6ZXZlbnQiLCJkZWxldGU6aW5mbyIsImRlbGV0ZTp1c2VyIiwicGF0Y2g6ZXZlbnQiLCJwYXRjaDppbmZvIiwicGF0Y2g6bG9jYXRpb24iLCJwb3N0OmV2ZW50IiwicG9zdDppbmZvIiwicG9zdDpsb2NhdGlvbiIsInJlYWQ6bG9jYXRpb24iLCJyZWFkOnBsYW5ldGFyeWhvdXJzIiwicmVhZDpwbGFubmVyIiwicmVhZDp1c2VycyIsInRlc3Q6dGVzdCJdfQ.JqAqId4Nc6hHvne28ZCaiZL7dzjk86_HqBjMKIcIAHi3bRkkyEzcIfeFRMnAVROtCasW4p5ilk4Plw3t04gSMmh-W5tgY-xLeHHMeAj15abVEDE23tAM25hoPGU_ieZ0HhibGzSgdFHvx-BdpB52yVwNdBBNP2TiELnaHxlWCDvqA_cnlpuh5hGz4Og-aNkfoR7w6hmVahNfqZPNI7x5y_COn1Z2R3jzLtUSxRpzsPo8q_I-jYCPn8PwBKAKC0TJKPf2OUCoBnPodELIkBWvgUO_SPA-zMcLIu9Tepl1fEL8wLmiP_N2XCRKB-VzHc3Z-pUepzguWTCA98rI8KlATA'
-        self.client_token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkxPeGtOeXViVk42TXhDRFBYcjRxUyJ9.eyJpc3MiOiJodHRwczovL3BsYS51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjJiMGY3OTFmMzNmNmQ5NzQ2MDc1MDZjIiwiYXVkIjpbInBsYW5ldGFyeXBsYW5uZXIvYXBpIiwiaHR0cHM6Ly9wbGEudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY1NjI5NDIwMCwiZXhwIjoxNjU2MzgwNjAwLCJhenAiOiI4NmRaVHZsQkdESjRNRW9vNVRkV1ZrbU9ueUFiTFRRRyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJkZWxldGU6ZXZlbnQiLCJwYXRjaDpldmVudCIsInBhdGNoOmxvY2F0aW9uIiwicG9zdDpldmVudCIsInBvc3Q6bG9jYXRpb24iLCJyZWFkOmxvY2F0aW9uIiwicmVhZDpwbGFuZXRhcnlob3VycyIsInJlYWQ6cGxhbm5lciJdfQ.gCYZysDEv2c3wC6Av114VhgX5CnC-kdZHss9AxDY2RXagobZqyfpuVgWjG7SvFU3gW0SGBrakHcRoTkwaPg0fHWxdJd65B1lQPcPraiDo7_R0ZTt2fIe7JhbxTi3AfKH4XQrtsOad7cSzQ7-t0fydnDfwxkzOat-3gtRGDfWz7doDxGwuBJ3KGqd0HmKQgvyvHJmhqmoI3PGTgx_udkn-wpWgPZNlrgyOeiQI4sTuSNuMC383w286GrbUNYf-z8PVuZ7OAltSZyqU-tzeYi5o9EakheVsgE_8rSSGJphJWaMwpllf5l-8D1SCkmtICEfklZ2hm-5BNhh4DC-y7Q0WQ'
+
+
+
+        self.admin_token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkxPeGtOeXViVk42TXhDRFBYcjRxUyJ9.eyJpc3MiOiJodHRwczovL3BsYS51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjJhZTkxY2E1NjM5ZjhkNGFkMjFjOWIxIiwiYXVkIjpbInBsYW5ldGFyeXBsYW5uZXIvYXBpIiwiaHR0cHM6Ly9wbGEudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY1NjQ3MDI2NSwiZXhwIjoxNjU2NTU2NjY1LCJhenAiOiI4NmRaVHZsQkdESjRNRW9vNVRkV1ZrbU9ueUFiTFRRRyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJkZWxldGU6ZXZlbnQiLCJkZWxldGU6aW5mbyIsImRlbGV0ZTp1c2VyIiwicGF0Y2g6ZXZlbnQiLCJwYXRjaDppbmZvIiwicGF0Y2g6bG9jYXRpb24iLCJwb3N0OmV2ZW50IiwicG9zdDppbmZvIiwicG9zdDpsb2NhdGlvbiIsInJlYWQ6bG9jYXRpb24iLCJyZWFkOnBsYW5ldGFyeWhvdXJzIiwicmVhZDpwbGFubmVyIiwicmVhZDp1c2VycyIsInRlc3Q6dGVzdCJdfQ.oxcWwCT57C74JW0R8ndq0wue-XMdacqOsYq0qWnJCgj2t0tfqnlcZHSiUK6Vh4JEoMLDNwQhCT8GwnJELGZaFa7nyX0bCnlaQQLYleOg4VBT5mB-wEQdUBC5RTpjoagMbo0q78MY68IjFS6hCFZrqLkRCu7g0QtX-MBUKGFeQtKxRd5HlhZnG94N6SY1djuebXISauUYh8ugjndRaXRqIpXWtCaI2Q_E09_zpVI1Td-jeezruSskbSsT6K8McTkK18cbtZXO9tkLiPDHhy9dCXMh0557adlyLvN80hs2lHFgFIgxCMTsmgqShPQFr4JXdGQtq6U4sKvMu-eCDLd74A'
+        self.client_token = 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkxPeGtOeXViVk42TXhDRFBYcjRxUyJ9.eyJpc3MiOiJodHRwczovL3BsYS51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjJiMGY3OTFmMzNmNmQ5NzQ2MDc1MDZjIiwiYXVkIjpbInBsYW5ldGFyeXBsYW5uZXIvYXBpIiwiaHR0cHM6Ly9wbGEudXMuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY1NjQ3MDIwMywiZXhwIjoxNjU2NTU2NjAzLCJhenAiOiI4NmRaVHZsQkdESjRNRW9vNVRkV1ZrbU9ueUFiTFRRRyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJwZXJtaXNzaW9ucyI6WyJkZWxldGU6ZXZlbnQiLCJwYXRjaDpldmVudCIsInBhdGNoOmxvY2F0aW9uIiwicG9zdDpldmVudCIsInBvc3Q6bG9jYXRpb24iLCJyZWFkOmxvY2F0aW9uIiwicmVhZDpwbGFuZXRhcnlob3VycyIsInJlYWQ6cGxhbm5lciJdfQ.ri-3FWmfLYm2AloYbGxbMQG5JPvlBSsj5Tbdd__apDiLYt_-lUyUc827TOCmOL3TAvltygIbW2zPomI3aF_HervQmQm5-YY83aGSRYuLIG2GnQscVM8-ZyUKkQCB7mIqDamyEnRB0XnfOCrCZakOBPTLJmUuuXPf3eqdvG-chrmVWhOLh3mdTFwdzaxiehbOF8z6mkphAmKRNDfWxaEauoM8bSqzXaC6CLZKU-PRz7Ljbqj6j4hIjUHZS-GUpOr0MJBrC2NOulgZhl_6KacHBTLDeNjw1yDJsH7rBMHnxMv_Th3Jjdm41E6jLmhWS7UROPa4VLIFm2eysXPujn3BTw'
+
         setup_db(self.app, self.database_path)
 
         self.new_location = {"city": "Berlin",
-                             "region": "MY ASS",
+                             "region": "Europe",
                              "timezone": "Europe/Berlin",
                              "latitude": 52.520008,
                              "longitude": 13.404954}
@@ -82,7 +83,7 @@ class APITestCase(TestCase):
 
     def test_admin_get_users(self):
         res = self.client().get("/users", follow_redirects=True, headers={
-            'Authorization': 'Bearer {}'.format(self.admin_token_token)})
+            'Authorization': 'Bearer {}'.format(self.admin_token)})
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data["success"])
@@ -365,3 +366,5 @@ class APITestCase(TestCase):
         self.assertFalse(data['success'])
 
 # Make the tests conveniently executable
+if __name__ == '__main__':
+    main()

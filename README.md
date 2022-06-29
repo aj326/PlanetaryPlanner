@@ -19,7 +19,11 @@ https://planetary-planner.herokuapp.com
 ```bash
 pip install -r requirements.txt
 ```
-
+4. **Environment Variables**
+```bash
+export FLASK_APP = app.py
+source setup.sh
+```
 ### Set up the Database
 Make sure postgres is [running](https://www.postgresqltutorial.com/), then from the command line, run:
 
@@ -28,16 +32,40 @@ psql < planetary_planner.psql
 psql < test_planetary_planner.psql
 ```
  You can manually populate the database, or populate it with curl commands.
+The provided psql files will populate the database, but feel free to add more data.
  
 ### Authentication
 There are two roles: admin and client. For testing porpuses, I set up two accounts:
-- Admin - admin@test.com PA$$word
+- Admin - admin@test.com 
 - Client - client@test.com
 
 The root dir of the server will show you the access token to use in [unit testing module:39](./test_all.py):
 
 <img src="/home/aj/PycharmProjects/PlanetaryPlanner/static/Screenshot from 2022-06-28 13-35-35.png"/>
 
+### How to run and test
+Go to the root directory of the app (directory where `app.py` is).
+**Running the server**:
+After successfully installing dependencies and setting up the database(s)
+You can run the flask server:
+`flask run --reload`
+If this does not work, this is probably because the FLASK_APP env variable is not set:
+`export FLASK_APP = app.py`
+`flask run --reload`
+You can now use the app locally.
+**Testing:**
+1. User needs to manually update the token variables by logging in to the app and getting access tokens from the app's webpage.
+2. The variables in [test_all.py:39](./test_all.py), `self.admin_token` and `self.client_token`
+need to be updated with the newly acquired tokens from the webpage (#1)
+3. To run the tests, go to the root directory and run
+`python test_all.py`
+
+**_Notes:_**
+**_There are tests that might fail because the indexes can be incorrect after running tests from inserts or deletes. If this happens, simply go to the failed tests, look at the id, and change it to a correct id in the database._**
+
+
+_**The database used for testing is referenced in the [test file](./test_all.py), at line 34.
+It is seperate than the production database, so any change to it is OKAY and would not affect the app**_
 ### Endpoints Details
 
 `GET '/users'`
@@ -57,7 +85,7 @@ returns json object of users with full details, as such
                 "region": "USA",
                 "timezone": "US/Central"
             },
-            "username": "ahmed.jehairan@protonmail.com"
+            "username": "email@email.com"
         },
         {
             "events": null,
@@ -109,7 +137,7 @@ returns json object with a specified user's events. This requires knowing the id
             "region": "USA",
             "timezone": "US/Central"
         },
-        "username": "ahmed.jehairan@protonmail.com"
+        "username": "email@email.com"
     }
 }
 ```
@@ -139,7 +167,7 @@ returns json object with a specified user's events. This requires knowing the id
             "region": "USA",
             "timezone": "US/Central"
         },
-        "username": "ahmed.jehairan@protonmail.com"
+        "username": "email@email.com"
     }
 }
 ```
